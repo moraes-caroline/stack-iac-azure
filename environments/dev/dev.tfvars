@@ -13,6 +13,8 @@ frontend = {
   app_name     = "app-front-dev"
   node_version = "20-lts"
 
+  api_url = "https://app-api-dev.azurewebsites.net"
+
   app_settings = {
     NODE_ENV = "development"
   }
@@ -20,7 +22,7 @@ frontend = {
 
 # Storage Account 
 storage_account_name = "stgdev01"
-location = "East US"
+location = "Brazil South"
 
 # SQL Server 
 resource_group_name = "rg-dev"

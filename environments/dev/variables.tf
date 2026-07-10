@@ -10,15 +10,23 @@ variable "location" {
   type = string
 }
 
+variable "vnet_name" {
+  type = string
+}
+
 variable "service_plan_name" {
   type = string
 }
 
-variable "api_app_name" {
+variable "key_vault_name" {
   type = string
 }
 
-variable "frontend_app_name" {
+variable "log_analytics_name" {
+  type = string
+}
+
+variable "app_insights_name" {
   type = string
 }
 
@@ -26,61 +34,36 @@ variable "storage_account_name" {
   type = string
 }
 
-variable "resource_group_name" {
+variable "sql_server_name" {
   type = string
 }
 
-variable "location" {
+variable "database_name" {
   type = string
 }
 
-variable "account_tier" {
-  type    = string
-  default = "Standard"
+variable "sql_sku" {
+  type = string
 }
 
-variable "account_replication_type" {
-  type    = string
-  default = "LRS"
+variable "api" {
+  type = object({
+    app_name     = string
+    node_version = string
+    app_settings = map(string)
+  })
 }
 
-variable "access_tier" {
-  type    = string
-  default = "Hot"
-}
-
-variable "public_network_access_enabled" {
-  type    = bool
-  default = false
-}
-
-variable "containers" {
-  type    = list(string)
-  default = []
+variable "frontend" {
+  type = object({
+    app_name     = string
+    node_version = string
+    api_url      = string
+    app_settings = map(string)
+  })
 }
 
 variable "tags" {
   type    = map(string)
   default = {}
 }
-
-variable "sql_server_name" {}
-variable "database_name" {}
-
-variable "admin_login" {}
-
-variable "admin_password" {
-  sensitive = true
-}
-
-variable "sku_name" {}
-
-variable "resource_group_name" {}
-variable "location" {}
-
-variable "key_vault_name" {}
-
-variable "sql_server_name" {}
-variable "database_name" {}
-
-variable "sql_sku" {}
