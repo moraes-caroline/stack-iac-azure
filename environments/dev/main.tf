@@ -300,3 +300,53 @@ module "diagnostic_frontend" {
     "AllMetrics"
   ]
 }
+
+module "diagnostic_sql" {
+  source = "git::https://github.com/moraes-caroline/iac-modules-azure.git//infra/modules/diagnostic-settings?ref=main"
+
+  name                       = "diag-sql-${var.environment}"
+  target_resource_id         = module.mssql.sql_server_id
+  log_analytics_workspace_id = module.monitoring.log_analytics_id
+
+  enabled_log_categories = [
+    "SQLSecurityAuditEvents"
+  ]
+
+  enabled_metric_categories = [
+    "AllMetrics"
+  ]
+}
+
+module "diagnostic_keyvault" {
+  source = "git::https://github.com/moraes-caroline/iac-modules-azure.git//infra/modules/diagnostic-settings?ref=main"
+
+  name                       = "diag-kv-${var.environment}"
+  target_resource_id         = module.key_vault.id
+  log_analytics_workspace_id = module.monitoring.log_analytics_id
+
+  enabled_log_categories = [
+    "AuditEvent"
+  ]
+
+  enabled_metric_categories = [
+    "AllMetrics"
+  ]
+}
+
+module "diagnostic_storage" {
+  source = "git::https://github.com/moraes-caroline/iac-modules-azure.git//infra/modules/diagnostic-settings?ref=main"
+
+  name                       = "diag-storage-${var.environment}"
+  target_resource_id         = module.storage.storage_account_id
+  log_analytics_workspace_id = module.monitoring.log_analytics_id
+
+  enabled_log_categories = [
+    "StorageRead",
+    "StorageWrite",
+    "StorageDelete"
+  ]
+
+  enabled_metric_categories = [
+    "Transaction"
+  ]
+}
