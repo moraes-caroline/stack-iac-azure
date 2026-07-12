@@ -64,7 +64,10 @@ jobs:
     - name: Terraform Init
       run: |
         terraform init -upgrade \
-        -backend-config=backend.hcl
+          -backend-config=backend.hcl \
+          -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
+          -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+          -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
     - name: Terraform Validate
       run: terraform validate
