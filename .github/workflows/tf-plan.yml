@@ -64,7 +64,7 @@ jobs:
     - name: Terraform Init
       run: |
         terraform init -upgrade \
-        -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+        -backend-config=backend.hcl
 
     - name: Terraform Validate
       run: terraform validate
