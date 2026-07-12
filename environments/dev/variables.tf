@@ -50,6 +50,7 @@ variable "api" {
   type = object({
     app_name     = string
     node_version = string
+    always_on    = bool
     app_settings = map(string)
   })
 }
@@ -58,6 +59,7 @@ variable "frontend" {
   type = object({
     app_name     = string
     node_version = string
+    always_on    = bool
     api_url      = string
     app_settings = map(string)
   })
