@@ -2,16 +2,18 @@
 api = {
   app_name     = "app-api-dev"
   node_version = "20-lts"
+  always_on    = true
 
   app_settings = {
     NODE_ENV = "development"
   }
 }
 
-# App Service Front-End
+# App Service FRONT END
 frontend = {
   app_name     = "app-front-dev"
   node_version = "20-lts"
+  always_on    = true
 
   api_url = "https://app-api-dev.azurewebsites.net"
 
