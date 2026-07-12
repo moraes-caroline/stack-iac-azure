@@ -3,7 +3,7 @@ environment = "dev"
 vnet_name = "vnet-dev"
 
 # Storage Account 
-storage_account_name = "stgdev01"
+storage_account_name = "stgdevopsdev001"
 location = "Brazil South"
 
 # App Service API
