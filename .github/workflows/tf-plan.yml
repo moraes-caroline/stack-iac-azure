@@ -22,7 +22,8 @@ permissions:
 
 env:
   TF_VERSION: "1.11.0"
-  WORKING_DIRECTORY: environments/prod
+  ENVIRONMENT: ${{ github.event.inputs.environment || 'dev' }}
+  # WORKING_DIRECTORY: environments/prod
 
 jobs:
   terraform-plan:
@@ -33,7 +34,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ${{ env.WORKING_DIRECTORY }}
+        working-directory: environments/${{ inputs.environment }}
 
     steps:
 
@@ -55,16 +56,25 @@ jobs:
     - name: Terraform Format Check
       run: terraform fmt -check -recursive
 
+    - name: Debug
+      run: |
+        echo "ENVIRONMENT=${{ env.ENVIRONMENT }}"
+        pwd
+        ls -la
+
     - name: Terraform Init
-      run: terraform init
+      run: terraform init -upgrade
 
     - name: Terraform Validate
       run: terraform validate
 
+    - name: Terraform State
+      run: terraform state list || true
+      
     - name: Terraform Plan
       run: |
         terraform plan \
-        -var-file="prod.tfvars" \
+        -var-file="${{ inputs.environment }}.tfvars" \
         -out=tfplan
 
     - name: Generate Plan Output
@@ -75,5 +85,5 @@ jobs:
       with:
         name: terraform-plan
         path: |
-          environments/prod/tfplan
-          environments/prod/tfplan.txt
+          environments/${{ inputs.environment }}/tfplan
+          environments/${{ inputs.environment }}/tfplan.txt
