@@ -1,6 +1,6 @@
 locals {
   tags = {
-    Environment = "prod"
+    Environment = var.environment
     Project     = "Stack Azure IAC"
     ManagedBy   = "Terraform"
   }
