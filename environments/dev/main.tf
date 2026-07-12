@@ -110,6 +110,43 @@ module "mssql" {
 }
 
 #################################################
+# PRIVATE DNS ZONE
+#################################################
+
+module "dns_sql" {
+  source = "git::https://github.com/moraes-caroline/iac-modules-azure.git//infra/modules/private-dns-zone?ref=main"
+
+  dns_zone_name = "privatelink.database.windows.net"
+
+  resource_group_name = module.resource_group.name
+  virtual_network_id  = module.network.vnet_id
+
+  tags = local.tags
+}
+
+module "dns_storage" {
+  source = "git::https://github.com/moraes-caroline/iac-modules-azure.git//infra/modules/private-dns-zone?ref=main"
+
+  dns_zone_name = "privatelink.blob.core.windows.net"
+
+  resource_group_name = module.resource_group.name
+  virtual_network_id  = module.network.vnet_id
+
+  tags = local.tags
+}
+
+module "dns_keyvault" {
+  source = "git::https://github.com/moraes-caroline/iac-modules-azure.git//infra/modules/private-dns-zone?ref=main"
+
+  dns_zone_name = "privatelink.vaultcore.azure.net"
+
+  resource_group_name = module.resource_group.name
+  virtual_network_id  = module.network.vnet_id
+
+  tags = local.tags
+}
+
+#################################################
 # PRIVATE ENDPOINTS
 #################################################
 module "private_endpoint_sql" {
@@ -126,12 +163,11 @@ module "private_endpoint_sql" {
     "sqlServer"
   ]
 
-  tags = local.tags
-
-  depends_on = [
-    module.network,
-    module.mssql
+  private_dns_zone_ids = [
+    module.dns_sql.id
   ]
+
+  tags = local.tags
 }
 
 module "private_endpoint_storage" {
@@ -146,6 +182,10 @@ module "private_endpoint_storage" {
 
   subresource_names = [
     "blob"
+  ]
+
+  private_dns_zone_ids = [
+    module.dns_storage.id
   ]
 
   tags = local.tags
@@ -168,6 +208,10 @@ module "private_endpoint_kv" {
 
   subresource_names = [
     "vault"
+  ]
+
+  private_dns_zone_ids = [
+    module.dns_keyvault.id
   ]
 
   tags = local.tags
