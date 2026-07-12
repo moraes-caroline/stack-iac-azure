@@ -1,3 +1,11 @@
+# Environment
+environment = "dev"
+vnet_name = "vnet-dev"
+
+# Storage Account 
+storage_account_name = "stgdev01"
+location = "Brazil South"
+
 # App Service API
 api = {
   app_name     = "app-api-dev"
@@ -22,10 +30,6 @@ frontend = {
   }
 }
 
-# Storage Account 
-storage_account_name = "stgdev01"
-location = "Brazil South"
-
 # SQL Server 
 resource_group_name = "rg-dev"
 key_vault_name = "kv-dev"
@@ -33,3 +37,10 @@ key_vault_name = "kv-dev"
 sql_server_name = "sql-server-dev"
 database_name = "db-server-dev"
 sql_sku = "S2"
+
+# Service Plan
+service_plan_name = "asp-dev"
+
+# Log Analytics
+log_analytics_name = "log-dev"
+app_insights_name = "appi-dev"
