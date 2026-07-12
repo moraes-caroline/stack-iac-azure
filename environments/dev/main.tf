@@ -1,15 +1,4 @@
 #################################################
-# DATA SOURCES
-#################################################
-
-data "azurerm_client_config" "current" {}
-
-data "azurerm_key_vault_secret" "sql_password" {
-  name         = "sql-admin-password"
-  key_vault_id = module.key_vault.id
-}
-
-#################################################
 # RESOURCE GROUP
 #################################################
 

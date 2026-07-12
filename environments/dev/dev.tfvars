@@ -26,8 +26,6 @@ location = "Brazil South"
 
 # SQL Server 
 resource_group_name = "rg-dev"
-location = "Brazil South"
-
 key_vault_name = "kv-dev"
 
 sql_server_name = "sql-server-dev"
