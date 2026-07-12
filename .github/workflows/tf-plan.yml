@@ -27,14 +27,13 @@ env:
 
 jobs:
   terraform-plan:
-
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment: ${{ github.event.inputs.environment || 'dev' }}
     
     defaults:
       run:
         shell: bash
-        working-directory: environments/${{ inputs.environment }}
+        working-directory: environments/${{ github.event.inputs.environment || 'dev' }}
 
     steps:
 
@@ -74,7 +73,7 @@ jobs:
     - name: Terraform Plan
       run: |
         terraform plan \
-        -var-file="${{ inputs.environment }}.tfvars" \
+        -var-file="${{ github.event.inputs.environment || 'dev' }}.tfvars" \
         -out=tfplan
 
     - name: Generate Plan Output
@@ -85,5 +84,5 @@ jobs:
       with:
         name: terraform-plan
         path: |
-          environments/${{ inputs.environment }}/tfplan
-          environments/${{ inputs.environment }}/tfplan.txt
+          environments/${{ github.event.inputs.environment || 'dev' }}/tfplan
+          environments/${{ github.event.inputs.environment || 'dev' }}/tfplan.txt
