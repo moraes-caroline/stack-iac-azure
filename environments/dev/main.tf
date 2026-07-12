@@ -58,6 +58,21 @@ module "key_vault" {
   tags = local.tags
 }
 
+resource "random_password" "sql" {
+  length  = 24
+  special = true
+}
+
+resource "azurerm_key_vault_secret" "sql_password" {
+  name         = "sql-admin-password"
+  value        = random_password.sql.result
+  key_vault_id = module.key_vault.id
+
+  depends_on = [
+    module.key_vault
+  ]
+}
+
 #################################################
 # STORAGE ACCOUNT
 #################################################
@@ -87,15 +102,12 @@ module "mssql" {
   location            = var.location
 
   admin_login    = "sqladmin"
-  admin_password = data.azurerm_key_vault_secret.sql_password.value
+  admin_password = random_password.sql.result
 
   sku_name = var.sql_sku
 
   tags = local.tags
 
-  depends_on = [
-    module.key_vault
-  ]
 }
 
 #################################################
