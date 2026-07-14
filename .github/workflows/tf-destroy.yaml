@@ -1,0 +1,156 @@
+name: Terraform Destroy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to destroy"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+      confirm_destroy:
+        description: "Type DESTROY to confirm"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TF_VERSION: "1.11.0"
+
+concurrency:
+  group: terraform-destroy-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  terraform-destroy:
+    name: Terraform Destroy
+    runs-on: ubuntu-latest
+
+    environment: ${{ inputs.environment }}
+
+    if: ${{ inputs.confirm_destroy == 'DESTROY' }}
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: environments/${{ inputs.environment }}
+
+    steps:
+      #################################################
+      # CHECKOUT
+      #################################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #################################################
+      # SETUP TERRAFORM
+      #################################################
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      #################################################
+      # AZURE LOGIN OIDC
+      #################################################
+
+      - name: Azure Login OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      #################################################
+      # DEBUG
+      #################################################
+
+      - name: Debug Environment
+        run: |
+          echo "Environment: ${{ inputs.environment }}"
+          pwd
+          ls -la
+
+      #################################################
+      # TERRAFORM INIT
+      #################################################
+
+      - name: Terraform Init
+        run: |
+          terraform init -upgrade \
+            -backend-config=backend.hcl \
+            -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
+            -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+            -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      #################################################
+      # TERRAFORM FORMAT CHECK
+      #################################################
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      #################################################
+      # TERRAFORM VALIDATE
+      #################################################
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      #################################################
+      # TERRAFORM STATE
+      #################################################
+
+      - name: Terraform State
+        run: terraform state list || true
+
+      #################################################
+      # TERRAFORM DESTROY PLAN
+      #################################################
+
+      - name: Terraform Destroy Plan
+        run: |
+          terraform plan \
+            -destroy \
+            -input=false \
+            -lock-timeout=5m \
+            -var-file="${{ inputs.environment }}.tfvars" \
+            -out=destroy.tfplan
+
+      #################################################
+      # GENERATE DESTROY PLAN OUTPUT
+      #################################################
+
+      - name: Generate Destroy Plan Output
+        run: terraform show -no-color destroy.tfplan > destroy-plan.txt
+
+      #################################################
+      # UPLOAD DESTROY PLAN ARTIFACT
+      #################################################
+
+      - name: Upload Destroy Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-destroy-plan-${{ inputs.environment }}
+          path: |
+            environments/${{ inputs.environment }}/destroy.tfplan
+            environments/${{ inputs.environment }}/destroy-plan.txt
+
+      #################################################
+      # TERRAFORM APPLY DESTROY PLAN
+      #################################################
+
+      - name: Terraform Apply Destroy Plan
+        run: |
+          terraform apply \
+            -input=false \
+            -auto-approve \
+            destroy.tfplan

@@ -1,0 +1,141 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  TF_VERSION: "1.11.0"
+
+concurrency:
+  group: terraform-apply-${{ github.event.inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  terraform-apply:
+    name: Terraform Apply
+    runs-on: ubuntu-latest
+
+    environment: ${{ github.event.inputs.environment }}
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: environments/${{ github.event.inputs.environment }}
+
+    steps:
+      #################################################
+      # CHECKOUT
+      #################################################
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      #################################################
+      # SETUP TERRAFORM
+      #################################################
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      #################################################
+      # AZURE LOGIN OIDC
+      #################################################
+
+      - name: Azure Login OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      #################################################
+      # DEBUG
+      #################################################
+
+      - name: Debug Environment
+        run: |
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          pwd
+          ls -la
+
+      #################################################
+      # TERRAFORM FORMAT
+      #################################################
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+
+      #################################################
+      # TERRAFORM INIT
+      #################################################
+
+      - name: Terraform Init
+        run: |
+          terraform init -upgrade \
+            -backend-config=backend.hcl \
+            -backend-config="tenant_id=${{ secrets.AZURE_TENANT_ID }}" \
+            -backend-config="client_id=${{ secrets.AZURE_CLIENT_ID }}" \
+            -backend-config="subscription_id=${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      #################################################
+      # TERRAFORM VALIDATE
+      #################################################
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      #################################################
+      # TERRAFORM PLAN
+      #################################################
+
+      - name: Terraform Plan
+        run: |
+          terraform plan \
+            -input=false \
+            -lock-timeout=5m \
+            -var-file="${{ github.event.inputs.environment }}.tfvars" \
+            -out=tfplan
+
+      #################################################
+      # SHOW PLAN
+      #################################################
+
+      - name: Generate Plan Output
+        run: terraform show -no-color tfplan > tfplan.txt
+
+      #################################################
+      # UPLOAD PLAN ARTIFACT
+      #################################################
+
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-apply-plan-${{ github.event.inputs.environment }}
+          path: |
+            environments/${{ github.event.inputs.environment }}/tfplan
+            environments/${{ github.event.inputs.environment }}/tfplan.txt
+
+      #################################################
+      # TERRAFORM APPLY
+      #################################################
+
+      - name: Terraform Apply
+        run: |
+          terraform apply \
+            -input=false \
+            -auto-approve \
+            tfplan
